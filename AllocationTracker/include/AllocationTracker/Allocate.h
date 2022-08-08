@@ -13,6 +13,7 @@
 #define CIN_ALLOCATOR_FORCE_INLINE	inline
 #endif
 
+#define CIN_ALLOCATOR_SHARED_STATE 0 /* Can free allocated memory from all threads */ 
 #define CIN_ALLOCATOR_USE_NOTHROW_NEW 1 /* Disable exceptions */
 #if CIN_ALLOCATOR_USE_NOTHROW_NEW 
 #define CIN_ALLOCATOR_THROW_ATTRIBUTE (std::nothrow)
@@ -55,8 +56,11 @@ static void SetMemoryDumpCallback(MemoryDumpCallbackFunction_t callback) noexcep
 		s_DumpCallbackFunction = callback;
 	}
 }
-
+#if CIN_ALLOCATOR_SHARED_STATE
+class ThreadAllocatorData final
+#else
 thread_local class ThreadAllocatorData final
+#endif
 {
 public:
 	struct AllocationData
@@ -75,7 +79,12 @@ public:
 		std::size_t Line;
 	};
 
+#if CIN_ALLOCATOR_SHARED_STATE
+	static inline std::unordered_map<const void*, AllocationData> Allocations;
+	static inline std::mutex s_AllocationRegistryMutex;
+#else
 	std::unordered_map<const void*, AllocationData> Allocations;
+#endif
 public:
 	~ThreadAllocatorData() noexcept
 	{
@@ -84,6 +93,9 @@ public:
 
 	CIN_ALLOCATOR_FORCE_INLINE void DumpThreadMemory()
 	{
+#if CIN_ALLOCATOR_SHARED_STATE
+		std::lock_guard<std::mutex> lock(s_AllocationRegistryMutex);
+#endif
 		if (!Allocations.empty())
 		{
 			for (const auto& [address, allocation] : Allocations)
@@ -93,11 +105,17 @@ public:
 
 	CIN_ALLOCATOR_FORCE_INLINE void Register(const void* address, const char* name, const std::size_t size, const char* file, const std::size_t line) noexcept
 	{
+#if CIN_ALLOCATOR_SHARED_STATE
+		std::lock_guard<std::mutex> lock(s_AllocationRegistryMutex);
+#endif
 		Allocations.emplace(address, std::move(AllocationData{ name, size, file, line }));
 	}
 
 	CIN_ALLOCATOR_FORCE_INLINE void Unregister(const void* address) noexcept
 	{
+#if CIN_ALLOCATOR_SHARED_STATE
+		std::lock_guard<std::mutex> lock(s_AllocationRegistryMutex);
+#endif
 		assert(Allocations.find(address) != Allocations.end());
 		Allocations.erase(address);
 	}

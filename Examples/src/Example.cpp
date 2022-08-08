@@ -1,6 +1,6 @@
 #include "AllocationTracker/Allocate.h"
 
-#define TEST 0 /* 1 or 0 */
+#define TEST 1 /* 1 or 0 */
 struct UserStructure final
 {
 	int x, y, z;
@@ -169,6 +169,33 @@ void BigAllocationFunction() noexcept
 
 void ThreadTest() noexcept
 {
+#if CIN_ALLOCATOR_SHARED_STATE
+	for (uint32_t i{ 0 }; i < 10; ++i)
+	{
+		int* allocation{ nullptr };
+		UserStructure* allocation2{ nullptr };
+
+
+		std::thread allocator{ [&]()
+		{
+			allocation = cinew int;
+			allocation2 = cinew UserStructure[1000];
+		} };
+
+		allocator.join();
+
+		if (!allocation)
+			std::abort();
+
+		std::thread deallocator{ [&]() 
+		{
+			cindel allocation;
+			cindelarr allocation2;
+		} };
+
+		deallocator.join();
+	}
+#else
 	std::thread
 		worker1{ []()
 			{
@@ -189,6 +216,7 @@ void ThreadTest() noexcept
 	worker1.join();
 	worker2.join();
 	worker3.join();
+#endif
 }
 
 #ifdef _MSC_VER
