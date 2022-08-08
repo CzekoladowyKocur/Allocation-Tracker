@@ -113,8 +113,7 @@ int main()
 		sum += value;
 	}
 
-	std::cout << sum << '\n';
-
+	std::cout << "Costum dump function set\n";
 	SetMemoryDumpCallback([](const void* allocation, const char* typeName, const std::size_t allocationSize, const char* filename, const std::size_t fileLine)
 		{
 			(void)allocation;
@@ -122,7 +121,7 @@ int main()
 			(void)filename;
 			(void)fileLine;
 
-			std::cout << typeName << " was left unfreed!\n";
+			std::cout << "My dump: " << typeName << " was left unfreed!\n";
 		});
 
 	if (int* integer{ cinew int })
@@ -131,7 +130,7 @@ int main()
 		std::abort(); /* new failed */
 
 	if (int* integer{ cinew int })
-		std::cout << "Ooops\n";
+		rand();
 	else
 		std::abort(); /* new failed */
 
@@ -140,7 +139,7 @@ int main()
 	else
 		std::abort(); /* new failed */
 
-	std::cout << "Program exit. . .\n";
+	std::cout << "Program exit. . ., dump function will be invoked \n";
 	/* automatically dump on thread destruction */
 	return 0;
 }
