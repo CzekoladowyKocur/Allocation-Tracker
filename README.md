@@ -16,7 +16,7 @@ no different to standard ones, making it as fast as possible.
 ![Tracks](https://github.com/CzekoladowyKocur/Allocation-Tracker/blob/master/screenshots/tracks.png)
 
 ## API
-Simply change the new/delete/delete[] calls to cinew/cindel/cindelarr macros, as shown below:
+Simply change the new/new[]/delete/delete[] calls to cinew/cindel/cindelarr macros, as shown below:
 ```
 int* integer = new int; => 
 int* integer = cinew int;
