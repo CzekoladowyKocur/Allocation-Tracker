@@ -36,8 +36,8 @@ These macros can be easily modified to your preferences.
 Upon each thread destruction all unreleased thread-local allocations are dumped to the 
 console. To explicitly dump current memory state, use CinDumpMemory() function. A costum memory
 dump function can be provided instead of the default one. **Allocating memory and freeing it in 
-a different thread is forbidden**. Threads keep local state. However, this can be easily changed
-with a global mutex and a shared state instead, although making it not lock-free.
+a different thread is forbidden**. Threads keep local state. To allow shared state, change 
+CIN_ALLOCATOR_SHARED_STATE to 1 in the header file.
 
 ### Build
 To build the project, run the provided batch script.
